@@ -1,11 +1,4 @@
-import { Handler, APIGatewayEvent } from "aws-lambda";
-// import { products } from "../service/products";
-
-interface EventById extends APIGatewayEvent {
-  id: string;
-}
-
-const products = [
+export const products = [
   {
     description: "Short Product Description1",
     id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
@@ -43,36 +36,3 @@ const products = [
     title: "ProductName",
   },
 ];
-
-export const main: Handler = async (event: APIGatewayEvent) => {
-  return {
-    message: `Event message ${JSON.stringify(event)}`,
-  };
-};
-
-export const getProductsList = async () => {
-  return {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    products,
-  };
-};
-
-export const getProductById = async (event: EventById) => {
-  const id = event.id || "";
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-  };
-  if (id.length) {
-    const product = products.find((product) => product.id === id);
-    return {
-      headers,
-      product,
-    };
-  }
-  return {
-    headers,
-    product: {},
-  };
-};
