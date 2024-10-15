@@ -1,5 +1,4 @@
 import { Handler, APIGatewayEvent } from "aws-lambda";
-// import { products } from "../service/products";
 
 interface EventById extends APIGatewayEvent {
   id: string;
