@@ -57,7 +57,6 @@ export class TestStack extends cdk.Stack {
     );
 
     const productsList = api.root.addResource("products");
-    // const productById = api.root.addResource("productById");
 
     const productById = productsList.addResource("{id}");
 
