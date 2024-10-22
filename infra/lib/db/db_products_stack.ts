@@ -17,7 +17,7 @@ export class DBProductsStack extends Stack {
       },
       sortKey: {
         name: "price",
-        type: dynamodb.AttributeType.STRING,
+        type: dynamodb.AttributeType.NUMBER,
       },
     });
 
