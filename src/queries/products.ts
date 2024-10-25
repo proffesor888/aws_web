@@ -4,12 +4,45 @@ import { AvailableProduct } from "~/models/Product";
 import { useQuery, useQueryClient, useMutation } from "react-query";
 import React from "react";
 
+interface IStock {
+  product_id: string;
+  count: number;
+}
+
+interface IProducts {
+  description: string;
+  id: string;
+  price: number;
+  title: string;
+}
+
+type FullDataType = Array<Omit<IStock, "product_id"> & IProducts>;
+
 export function useAvailableProducts() {
   return useQuery<AvailableProduct[], AxiosError>(
     "available-products",
     async () => {
       const res = await axios.get(`${API_PATHS.bff}/products`);
-      return res.data.products;
+      const stock = await axios.get(`${API_PATHS.bff}/stock`);
+      const productsData = JSON.parse(res.data.products);
+      const stockData = JSON.parse(stock.data.stock);
+      if (productsData.length && stockData.length) {
+        const fullData: FullDataType = [];
+        productsData.forEach((product: IProducts) => {
+          const id = product.id;
+          const count = stockData.filter(
+            (stock: IStock) => stock.product_id === id
+          );
+          if (count.length) {
+            const fullProduct = { ...product, count: count[0].count };
+            fullData.push(fullProduct);
+          } else {
+            fullData.push({ ...product, count: 0 });
+          }
+        });
+        return fullData;
+      }
+      return [];
     }
   );
 }
