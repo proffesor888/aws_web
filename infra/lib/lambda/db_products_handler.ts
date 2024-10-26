@@ -66,3 +66,26 @@ export const AddProductsMock: Handler = async () => {
     throw new Error("Error adding item to DynamoDB table");
   }
 };
+
+export const createProduct: Handler = async (event) => {
+  const { title = "", price = "", description = "" } = event;
+  const idN = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
+  if (!title.length || !price.length || !description.length) {
+    return;
+  }
+  const params = new PutItemCommand({
+    TableName: tableName,
+    Item: {
+      id: { S: `${idN}` },
+      title: { S: `${title}` },
+      price: { N: `${price}` },
+      description: { S: `${description}` },
+    },
+  });
+  try {
+    await dynamoDB.send(params);
+  } catch (error) {
+    console.error("Error:", error);
+    throw new Error(`${error}`);
+  }
+};

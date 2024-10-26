@@ -31,7 +31,6 @@ export class DBProductsStack extends Stack {
         TABLE_NAME: "Products",
       },
     });
-
     productsTable.grantWriteData(addMockProducts);
   }
 }

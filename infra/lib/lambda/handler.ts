@@ -1,12 +1,6 @@
 import { Handler, APIGatewayEvent } from "aws-lambda";
-import {
-  DynamoDBClient,
-  ScanCommand,
-  AttributeValue,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
-
-// Create a Document client to interact directly with DynamoDB tables in a more JavaScript-friendly manner
 
 const client = new DynamoDBClient();
 
@@ -58,15 +52,6 @@ export const main: Handler = async (event: APIGatewayEvent) => {
     message: `Event message ${JSON.stringify(event)}`,
   };
 };
-
-// export const getProductsList = async () => {
-//   return {
-//     headers: {
-//       "Access-Control-Allow-Origin": "*",
-//     },
-//     products,
-//   };
-// };
 
 export const getProductsList = async () => {
   const input = {
