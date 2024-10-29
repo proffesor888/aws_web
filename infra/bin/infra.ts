@@ -5,6 +5,7 @@ import { DeployWebAppStack } from "../lib/deploy_webapp_stack";
 import { TestStack } from "../lib/lambda/test_stack";
 import { DBStockStack } from "../lib/db/db_stock_stack";
 import { DBProductsStack } from "../lib/db/db_products_stack";
+import { ImportServiceStack } from "../lib/s3/ImportServiceStack";
 
 const app = new cdk.App();
 new DeployWebAppStack(app, "InfraStack", {
@@ -22,3 +23,4 @@ new DeployWebAppStack(app, "InfraStack", {
 new TestStack(app, "TestStack", {});
 new DBStockStack(app, "Stock");
 new DBProductsStack(app, "Products");
+new ImportServiceStack(app, "Service");
