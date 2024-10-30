@@ -51,18 +51,6 @@ export class TestStack extends cdk.Stack {
       },
     });
 
-    // const importProductsFileFunction = new lambda.Function(
-    //   this,
-    //   "import-products",
-    //   {
-    //     runtime: lambda.Runtime.NODEJS_20_X,
-    //     memorySize: 1024,
-    //     timeout: cdk.Duration.seconds(5),
-    //     handler: "importProductsFile.importProductsFile",
-    //     code: lambda.Code.fromAsset(path.join(__dirname, "./")),
-    //   }
-    // );
-
     const api = new apigateway.RestApi(this, "api", {
       restApiName: "API Gateway",
       description: "This API serves the Lambda functions.",
@@ -75,17 +63,6 @@ export class TestStack extends cdk.Stack {
         proxy: false,
       }
     );
-
-    // const importProductsFileIntegration = new apigateway.LambdaIntegration(
-    //   importProductsFileFunction,
-    //   {
-    //     integrationResponses: [{ statusCode: "200" }],
-    //     proxy: false,
-    //     requestTemplates: {
-    //       "application/json": `{ "filename": "$input.params('filename')" }`,
-    //     },
-    //   }
-    // );
 
     const getProductsListIntegration = new apigateway.LambdaIntegration(
       getProductsListFunction,
@@ -119,13 +96,8 @@ export class TestStack extends cdk.Stack {
 
     const productsList = api.root.addResource("products");
     const stock = api.root.addResource("stock");
-    // const importPath = api.root.addResource("import");
 
     const productById = productsList.addResource("{id}");
-
-    // importPath.addMethod("GET", importProductsFileIntegration, {
-    //   methodResponses: [{ statusCode: "200" }],
-    // });
 
     productsList.addMethod("GET", getProductsListIntegration, {
       methodResponses: [{ statusCode: "200" }],

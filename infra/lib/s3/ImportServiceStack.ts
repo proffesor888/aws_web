@@ -1,9 +1,9 @@
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cdk from "aws-cdk-lib";
+import { aws_s3, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3notifications from "aws-cdk-lib/aws-s3-notifications";
-import * as iam from "aws-cdk-lib/aws-iam";
 import * as path from "path";
 import {
   AwsCustomResource,
@@ -15,9 +15,10 @@ export class ImportServiceStack extends cdk.Stack {
   constructor(construct: Construct, id: string, options?: cdk.StackProps) {
     super(construct, id, options);
 
-    const bucket = new s3.Bucket(this, "service", {
-      versioned: true,
-      bucketName: "service",
+    const bucket = new aws_s3.Bucket(this, "service", {
+      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      bucketName: "servicenkjsfngjknsrjktejt535",
     });
 
     new AwsCustomResource(this, "CreateFolder", {
@@ -26,7 +27,7 @@ export class ImportServiceStack extends cdk.Stack {
         action: "putObject",
         parameters: {
           Bucket: bucket.bucketName,
-          key: "uploaded",
+          Key: "uploaded",
           Body: "",
         },
         physicalResourceId: {
@@ -46,7 +47,7 @@ export class ImportServiceStack extends cdk.Stack {
         memorySize: 1024,
         timeout: cdk.Duration.seconds(5),
         handler: "importProductsFile.importProductsFile",
-        code: lambda.Code.fromAsset(path.join(__dirname, "../", "lambda")),
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
       }
     );
 
@@ -58,7 +59,7 @@ export class ImportServiceStack extends cdk.Stack {
         memorySize: 1024,
         timeout: cdk.Duration.seconds(5),
         handler: "importProductsFile.importFileParser",
-        code: lambda.Code.fromAsset(path.join(__dirname, "../", "lambda")),
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
       }
     );
 
@@ -82,6 +83,7 @@ export class ImportServiceStack extends cdk.Stack {
     resource.addMethod("GET", importProductsFileIntegration, {
       methodResponses: [{ statusCode: "200" }],
     });
+
     bucket.grantReadWrite(importProductsFileFunction);
     bucket.grantReadWrite(importFileParserFunction);
 
@@ -90,10 +92,5 @@ export class ImportServiceStack extends cdk.Stack {
       new s3notifications.LambdaDestination(importFileParserFunction),
       { prefix: "uploaded/" }
     );
-
-    importFileParserFunction.addPermission("AllowS3Invocation", {
-      principal: new iam.ServicePrincipal("s3.amazon.com"),
-      sourceArn: bucket.bucketArn,
-    });
   }
 }

@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-import "source-map-support/register";
+// #!/usr/bin/env node
+// import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { DeployWebAppStack } from "../lib/deploy_webapp_stack";
 import { TestStack } from "../lib/lambda/test_stack";
@@ -23,4 +23,4 @@ new DeployWebAppStack(app, "InfraStack", {
 new TestStack(app, "TestStack", {});
 new DBStockStack(app, "Stock");
 new DBProductsStack(app, "Products");
-new ImportServiceStack(app, "Service");
+new ImportServiceStack(app, "ImportService");

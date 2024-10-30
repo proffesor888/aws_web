@@ -1,9 +1,10 @@
 import { APIGatewayEvent, Handler } from "aws-lambda";
-import { S3 } from "aws-cdk";
+import * as AWS from "aws-sdk";
+import { Readable } from "stream";
 import * as csv from "csv-parser";
-// import * as s3 from "aws-cdk-lib/aws-s3";
 
-const s3 = new S3();
+const s3 = new AWS.S3();
+// const s3 = new aws_s3.Bucket();
 
 interface EventByFileName extends APIGatewayEvent {
   filename: string;
@@ -26,11 +27,22 @@ export const importFileParser: Handler = async (event) => {
     return;
   }
   const params = { Bucket: bucket, Key: key };
-  const stream = s3.getObject(params).createReadableStream();
-  const results: unknown[] = [];
-
-  stream
-    .pipe(csv())
-    .on("data", (data: unknown) => results.push(data))
-    .on("end", () => console.log(results));
+  try {
+    const data = await s3.getObject(params).promise();
+    const results: unknown[] = [];
+    if (data.Body instanceof Readable) {
+      data.Body.pipe(csv())
+        .on("data", (data: unknown) => results.push(data))
+        .on("end", () => console.log(results));
+    }
+    return {
+      statusCode: 200,
+      body: "Success",
+    };
+  } catch (e) {
+    return {
+      statusCode: 500,
+      body: "Failed",
+    };
+  }
 };
