@@ -40,9 +40,12 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
       console.warn(file);
       const result = await fetch(response.data.url, {
         method: "PUT",
+        headers: {
+          "Content-Type": "text/csv",
+        },
         body: file,
       });
-      console.log("Result: ", result);
+      console.warn("Result: ", result);
       setFile(null);
     }
   };

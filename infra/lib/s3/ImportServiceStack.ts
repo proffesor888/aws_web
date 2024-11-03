@@ -10,6 +10,7 @@ import {
   AwsCustomResourcePolicy,
 } from "aws-cdk-lib/custom-resources";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(construct: Construct, id: string, options?: cdk.StackProps) {
@@ -51,6 +52,13 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    importProductsFileFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["s3:GetObject", "s3:PutObject"],
+        resources: [`${bucket.bucketArn}/uploaded/*`],
+      })
+    );
+
     const importFileParserFunction = new lambda.Function(
       this,
       "import-file-parser",
@@ -66,6 +74,10 @@ export class ImportServiceStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "api-bucket", {
       restApiName: "API Bucket",
       description: "This API serves the Lambda functions for S3.",
+      // defaultCorsPreflightOptions: {
+      //   allowOrigins: apigateway.Cors.ALL_ORIGINS,
+      //   allowMethods: apigateway.Cors.ALL_METHODS,
+      // },
     });
 
     const importProductsFileIntegration = new apigateway.LambdaIntegration(
