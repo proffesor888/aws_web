@@ -32,10 +32,37 @@ export class TestStack extends cdk.Stack {
       }
     );
 
+    const getAllStockFunction = new lambda.Function(this, "get-all-stock", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      memorySize: 1024,
+      timeout: cdk.Duration.seconds(5),
+      handler: "handler.getAllStock",
+      code: lambda.Code.fromAsset(path.join(__dirname, "./")),
+    });
+
+    const createProductFunction = new lambda.Function(this, "createProduct", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      memorySize: 1024,
+      timeout: cdk.Duration.seconds(5),
+      handler: "db_products_handler.createProduct",
+      code: lambda.Code.fromAsset(path.join(__dirname, "./")),
+      environment: {
+        TABLE_NAME: "Products",
+      },
+    });
+
     const api = new apigateway.RestApi(this, "api", {
       restApiName: "API Gateway",
       description: "This API serves the Lambda functions.",
     });
+
+    const getAllStockIntegration = new apigateway.LambdaIntegration(
+      getAllStockFunction,
+      {
+        integrationResponses: [{ statusCode: "200" }],
+        proxy: false,
+      }
+    );
 
     const getProductsListIntegration = new apigateway.LambdaIntegration(
       getProductsListFunction,
@@ -56,7 +83,19 @@ export class TestStack extends cdk.Stack {
       }
     );
 
+    const createProductIntegration = new apigateway.LambdaIntegration(
+      createProductFunction,
+      {
+        requestTemplates: {
+          "application/json": `{ "title": "$input.params('title')", "description": "$input.params('description')", "price": "$input.params('price')" }`,
+        },
+        integrationResponses: [{ statusCode: "200" }],
+        proxy: false,
+      }
+    );
+
     const productsList = api.root.addResource("products");
+    const stock = api.root.addResource("stock");
 
     const productById = productsList.addResource("{id}");
 
@@ -64,6 +103,17 @@ export class TestStack extends cdk.Stack {
       methodResponses: [{ statusCode: "200" }],
     });
 
+    productsList.addMethod("POST", createProductIntegration, {
+      methodResponses: [{ statusCode: "200" }],
+    });
+
+    productById.addMethod("GET", getProductByIdIntegration, {
+      methodResponses: [{ statusCode: "200" }],
+    });
+
+    stock.addMethod("GET", getAllStockIntegration, {
+      methodResponses: [{ statusCode: "200" }],
+    });
     productById.addMethod("GET", getProductByIdIntegration, {
       methodResponses: [{ statusCode: "200" }],
     });
