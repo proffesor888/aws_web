@@ -114,5 +114,8 @@ export class TestStack extends cdk.Stack {
     stock.addMethod("GET", getAllStockIntegration, {
       methodResponses: [{ statusCode: "200" }],
     });
+    productById.addMethod("GET", getProductByIdIntegration, {
+      methodResponses: [{ statusCode: "200" }],
+    });
   }
 }

@@ -105,6 +105,12 @@ export const getAllStock = async () => {
     console.error("Error fetching from DynamoDB:", e);
     throw e;
   }
+  return {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+    products,
+  };
 };
 
 export const getProductById = async (event: EventById) => {
