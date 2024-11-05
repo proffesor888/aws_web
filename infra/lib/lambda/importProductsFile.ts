@@ -57,7 +57,7 @@ export const importFileParser: Handler = async (event) => {
 
       readableStream
         .pipe(csv())
-        .on("data", (data) => results.push(data))
+        .on("data", (data: unknown) => results.push(data))
         .on("end", resolve)
         .on("error", reject);
     });
