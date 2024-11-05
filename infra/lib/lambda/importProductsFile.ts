@@ -7,7 +7,7 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 const s3 = new AWS.S3({ region: "us-east-1" });
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const queueUrl =
-  "https://sqs.us-east-1.amazonaws.com/376129883738/ProductSqsStack-productsqs594A7C13-rgbbdTSTe2Zm";
+  "https://sqs.us-east-1.amazonaws.com/376129883738/ProductSqsStack-catalogItemsQueue79451959-jHu4RtTrOG45";
 
 interface EventByFileName extends APIGatewayEvent {
   filename: string;
@@ -67,6 +67,7 @@ export const importFileParser: Handler = async (event) => {
             QueueUrl: queueUrl,
             MessageBody: messageBody,
           };
+          console.log(params);
           await sqsClient.send(new SendMessageCommand(params));
         })
         .on("end", resolve)

@@ -8,19 +8,21 @@ export async function catalogBatchProcess(event: SQSEvent): Promise<void> {
   try {
     for (const record of event.Records) {
       const product = JSON.parse(record.body);
-
+      console.log("Parsed Product", product);
       const params = {
         TableName: "Products",
         Item: {
-          id: { S: product.productId },
-          price: { S: product.price.toString() },
-          title: { N: product.title },
+          id: { S: product.id },
+          price: { N: product.price },
+          title: { S: product.title },
           description: { S: product.description || "" },
         },
       };
 
-      await dynamoDBClient.send(new PutItemCommand(params));
-      console.log(`Product inserted: ${product.productId}`);
+      dynamoDBClient
+        .send(new PutItemCommand(params))
+        .then(() => console.log(`Product inserted: ${product.id}`))
+        .catch((e) => console.log(e));
     }
   } catch (error) {
     console.error("Error processing SQS message:", error);
