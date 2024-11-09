@@ -4,12 +4,13 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { SnsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 
 export class ProductSnsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const productTopic = new sns.Topic(this, "product-topic");
+    const productTopic = new sns.Topic(this, "createProductTopic");
 
     const lambdaFunction = new lambda.Function(this, "sns-lambda", {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -18,6 +19,12 @@ export class ProductSnsStack extends cdk.Stack {
       handler: "sns_handler.main",
       code: lambda.Code.fromAsset(path.join(__dirname, "./", "lambda")),
     });
+
+    const emailSubscription = new subscriptions.EmailSubscription(
+      "proffesor888@gmail.com"
+    );
+
+    productTopic.addSubscription(emailSubscription);
 
     lambdaFunction.addEventSource(new SnsEventSource(productTopic));
   }
