@@ -71,14 +71,32 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    const lambdaAuthorizerFunction = new lambda.Function(
+      this,
+      "LambdaAuthorizerFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        memorySize: 1024,
+        timeout: cdk.Duration.seconds(5),
+        handler: "basic_authorizer_handler.basicAuthorizer",
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
+      }
+    );
+
     const api = new apigateway.RestApi(this, "api-bucket", {
       restApiName: "API Bucket",
       description: "This API serves the Lambda functions for S3.",
-      // defaultCorsPreflightOptions: {
-      //   allowOrigins: apigateway.Cors.ALL_ORIGINS,
-      //   allowMethods: apigateway.Cors.ALL_METHODS,
-      // },
     });
+
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "APIGatewayAuthorizer",
+      {
+        handler: lambdaAuthorizerFunction,
+        identitySource: "method.request.header.Authorization",
+        authorizerName: "LambdaTokenAuthorizer",
+      }
+    );
 
     const importProductsFileIntegration = new apigateway.LambdaIntegration(
       importProductsFileFunction,
@@ -92,7 +110,10 @@ export class ImportServiceStack extends cdk.Stack {
     );
 
     const resource = api.root.addResource("import");
+
     resource.addMethod("GET", importProductsFileIntegration, {
+      authorizer: authorizer,
+      authorizationType: apigateway.AuthorizationType.CUSTOM,
       methodResponses: [{ statusCode: "200" }],
     });
 
