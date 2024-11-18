@@ -1,16 +1,15 @@
 {
-  "name": "nodejs",
+  "name": "aws-cdk-lib-layer",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
+  "keywords": [],
+  "description": "",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
-    "csv-parser": "^3.0.0"
+    "aws-cdk-lib": "^2.167.1"
   }
 }

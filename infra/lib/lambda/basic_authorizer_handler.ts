@@ -1,45 +1,40 @@
 import { Effect } from "aws-cdk-lib/aws-iam";
 import {
   APIGatewayTokenAuthorizerEvent,
-  CustomAuthorizerResult,
+  APIGatewayAuthorizerResult,
+  APIGatewayAuthorizerResultContext,
 } from "aws-lambda";
 
-export async function basicAuthorizer(
-  event: APIGatewayTokenAuthorizerEvent
-): Promise<unknown> {
+export async function basicAuthorizer(event: APIGatewayTokenAuthorizerEvent) {
   const authorizationHeader = event.authorizationToken;
 
   if (!authorizationHeader) {
-    return {
-      httpStatus: "401",
-      message: "Authorization header is not provided",
-    };
-    // throw new Error("Unauthorized");
+    return generatePolicy("default", Effect.DENY, event.methodArn, {
+      authorized: false,
+    });
   }
 
   const encodedCredentials = authorizationHeader.split(" ")[1];
   const [username, password] = Buffer.from(encodedCredentials, "base64")
     .toString("utf8")
-    .split(":");
-
+    .split("=");
   const envPassword = process.env[username];
-  // const envPassword = process.env.BASIC_AUTH_PASSWORD;
-
   if (process.env[username] && password === envPassword) {
-    return generatePolicy("user", Effect.ALLOW, event.methodArn);
-  } else {
-    return {
-      httpStatus: "403",
-      message: "Cccess is denied for this user ",
-    };
+    return generatePolicy("default", Effect.ALLOW, event.methodArn, {
+      authorized: true,
+    });
   }
+  return generatePolicy("default", Effect.DENY, event.methodArn, {
+    authorized: false,
+  });
 }
 
 function generatePolicy(
   principalId: string,
   effect: Effect,
-  resource: string
-): CustomAuthorizerResult {
+  resource: string,
+  context: APIGatewayAuthorizerResultContext | null
+): unknown {
   return {
     principalId,
     policyDocument: {

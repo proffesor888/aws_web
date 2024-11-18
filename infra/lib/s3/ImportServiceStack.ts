@@ -40,6 +40,18 @@ export class ImportServiceStack extends cdk.Stack {
       }),
     });
 
+    const Layer = new lambda.LayerVersion(this, "Layer", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../", "../", "aws-cdk-lib-layer")
+      ), // Adjust the path as necessary
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X], // Specify compatible runtimes,
+    });
+
+    const CVSLayer = new lambda.LayerVersion(this, "CVSLayer", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../", "../", "layers")), // Adjust the path as necessary
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X], // Specify compatible runtimes,
+    });
+
     const importProductsFileFunction = new lambda.Function(
       this,
       "import-products",
@@ -49,6 +61,7 @@ export class ImportServiceStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(5),
         handler: "importProductsFile.importProductsFile",
         code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
+        layers: [Layer, CVSLayer],
       }
     );
 
@@ -71,6 +84,34 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    const api = new apigateway.RestApi(this, "api-bucket", {
+      restApiName: "API Bucket",
+      description: "This API serves the Lambda functions for S3.",
+    });
+
+    const resource = api.root.addResource("import");
+
+    const importProductsFileIntegration = new apigateway.LambdaIntegration(
+      importProductsFileFunction,
+      {
+        integrationResponses: [{ statusCode: "200" }],
+        proxy: false,
+        // requestTemplates: {
+        //   "application/json": JSON.stringify({
+        //     context: {
+        //       accountId: "$context.accountId",
+        //       apiId: "$context.apiId",
+        //       context: "$context",
+        //     },
+        //     filename: "$input.params('filename')",
+        //   }),
+        // },
+        requestTemplates: {
+          "application/json": `{ "filename": "$input.params('filename')" }`,
+        },
+      }
+    );
+
     const lambdaAuthorizerFunction = new lambda.Function(
       this,
       "LambdaAuthorizerFunction",
@@ -80,13 +121,12 @@ export class ImportServiceStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(5),
         handler: "basic_authorizer_handler.basicAuthorizer",
         code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
+        layers: [Layer],
+        environment: {
+          proffesor888: "TEST_PASSWORD",
+        },
       }
     );
-
-    const api = new apigateway.RestApi(this, "api-bucket", {
-      restApiName: "API Bucket",
-      description: "This API serves the Lambda functions for S3.",
-    });
 
     const authorizer = new apigateway.TokenAuthorizer(
       this,
@@ -97,19 +137,6 @@ export class ImportServiceStack extends cdk.Stack {
         authorizerName: "LambdaTokenAuthorizer",
       }
     );
-
-    const importProductsFileIntegration = new apigateway.LambdaIntegration(
-      importProductsFileFunction,
-      {
-        integrationResponses: [{ statusCode: "200" }],
-        proxy: false,
-        requestTemplates: {
-          "application/json": `{ "filename": "$input.params('filename')" }`,
-        },
-      }
-    );
-
-    const resource = api.root.addResource("import");
 
     resource.addMethod("GET", importProductsFileIntegration, {
       authorizer: authorizer,
