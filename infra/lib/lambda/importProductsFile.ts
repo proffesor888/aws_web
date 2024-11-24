@@ -14,6 +14,7 @@ interface EventByFileName extends APIGatewayEvent {
   host: string;
   path: string;
   stage: string;
+  context?: unknown;
 }
 
 const headers = {
@@ -21,19 +22,27 @@ const headers = {
 };
 
 export const importProductsFile: Handler = async (event: EventByFileName) => {
-  const { filename = "", host, path, stage } = event;
-  if (filename.length && host && path && stage) {
+  const { filename = "" } = event;
+  if (filename.length) {
     const params = {
       Bucket: "servicenkjsfngjknsrjktejt535/uploaded",
       Key: filename,
       ContentType: "text/csv",
     };
-    const signedURL = await s3.getSignedUrlPromise("putObject", params);
-    return {
-      headers,
-      url: signedURL,
-      filename: `uploaded/${filename}`,
-    };
+    try {
+      const signedURL = await s3.getSignedUrlPromise("putObject", params);
+      return {
+        headers,
+        url: signedURL,
+        filename: `uploaded/${filename}`,
+      };
+    } catch (error) {
+      console.log("error", error);
+      return {
+        headers,
+        error,
+      };
+    }
   }
   return { headers, message: "data url missing" };
 };

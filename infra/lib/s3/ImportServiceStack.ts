@@ -40,6 +40,18 @@ export class ImportServiceStack extends cdk.Stack {
       }),
     });
 
+    const Layer = new lambda.LayerVersion(this, "Layer", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "../", "../", "aws-cdk-lib-layer")
+      ), // Adjust the path as necessary
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X], // Specify compatible runtimes,
+    });
+
+    const CVSLayer = new lambda.LayerVersion(this, "CVSLayer", {
+      code: lambda.Code.fromAsset(path.join(__dirname, "../", "../", "layers")), // Adjust the path as necessary
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X], // Specify compatible runtimes,
+    });
+
     const importProductsFileFunction = new lambda.Function(
       this,
       "import-products",
@@ -49,6 +61,7 @@ export class ImportServiceStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(5),
         handler: "importProductsFile.importProductsFile",
         code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
+        layers: [Layer, CVSLayer],
       }
     );
 
@@ -74,11 +87,9 @@ export class ImportServiceStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "api-bucket", {
       restApiName: "API Bucket",
       description: "This API serves the Lambda functions for S3.",
-      // defaultCorsPreflightOptions: {
-      //   allowOrigins: apigateway.Cors.ALL_ORIGINS,
-      //   allowMethods: apigateway.Cors.ALL_METHODS,
-      // },
     });
+
+    const resource = api.root.addResource("import");
 
     const importProductsFileIntegration = new apigateway.LambdaIntegration(
       importProductsFileFunction,
@@ -91,8 +102,35 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
-    const resource = api.root.addResource("import");
+    const lambdaAuthorizerFunction = new lambda.Function(
+      this,
+      "LambdaAuthorizerFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        memorySize: 1024,
+        timeout: cdk.Duration.seconds(5),
+        handler: "basic_authorizer_handler.basicAuthorizer",
+        code: lambda.Code.fromAsset(path.resolve(__dirname, "../", "lambda")),
+        layers: [Layer],
+        environment: {
+          proffesor888: "TEST_PASSWORD",
+        },
+      }
+    );
+
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "APIGatewayAuthorizer",
+      {
+        handler: lambdaAuthorizerFunction,
+        identitySource: "method.request.header.Authorization",
+        authorizerName: "LambdaTokenAuthorizer",
+      }
+    );
+
     resource.addMethod("GET", importProductsFileIntegration, {
+      authorizer: authorizer,
+      authorizationType: apigateway.AuthorizationType.CUSTOM,
       methodResponses: [{ statusCode: "200" }],
     });
 
