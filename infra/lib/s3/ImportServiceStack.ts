@@ -96,16 +96,6 @@ export class ImportServiceStack extends cdk.Stack {
       {
         integrationResponses: [{ statusCode: "200" }],
         proxy: false,
-        // requestTemplates: {
-        //   "application/json": JSON.stringify({
-        //     context: {
-        //       accountId: "$context.accountId",
-        //       apiId: "$context.apiId",
-        //       context: "$context",
-        //     },
-        //     filename: "$input.params('filename')",
-        //   }),
-        // },
         requestTemplates: {
           "application/json": `{ "filename": "$input.params('filename')" }`,
         },

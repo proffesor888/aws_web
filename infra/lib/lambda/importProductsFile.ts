@@ -53,14 +53,13 @@ export const importFileParser: Handler = async (event) => {
     event.Records[0].s3.object.key.replace(/\\+/g, " ")
   );
   if (!key.startsWith("uploaded/")) {
+    console.log("Wrong folder");
     return;
   }
   const params = { Bucket: bucket, Key: key };
   try {
     const data = await s3.getObject(params).promise();
     const csvData = data.Body?.toString("utf-8") || "";
-    // const streamPipe = stream.Readable.from(csvData);
-    // const results: unknown[] = [];
     await new Promise((resolve, reject) => {
       const readableStream = new stream.Readable();
       // eslint-disable-next-line @typescript-eslint/no-empty-function
