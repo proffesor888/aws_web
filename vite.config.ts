@@ -17,12 +17,11 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: path.join(__dirname, "resources", "build"),
+    emptyOutDir: true,
     rollupOptions: {
-      external: [
-        ...filesNeedToExclude
-      ],
+      external: [...filesNeedToExclude],
     },
-  }, 
+  },
   test: {
     globals: true,
     environment: "jsdom",

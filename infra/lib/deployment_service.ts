@@ -19,6 +19,7 @@ export class DeploymentService extends Construct {
       blockPublicAccess: aws_s3.BlockPublicAccess.BLOCK_ALL,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      bucketName: "frontendjehrstljkljljkdjgt",
     });
 
     const distribution = new aws_cloudfront.Distribution(this, "Distribution", {
